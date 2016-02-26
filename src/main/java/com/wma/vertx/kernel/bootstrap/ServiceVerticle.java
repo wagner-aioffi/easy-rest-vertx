@@ -4,9 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.wma.vertx.example.*;
-import com.wma.vertx.example.api.HelloWordAPI;
-import com.wma.vertx.kernel.api.APIConfigurationHandler;
+import com.wma.vertx.kernel.api.APIMethodBindConfigurationHandler;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerResponse;
@@ -15,11 +13,11 @@ import io.vertx.ext.web.handler.StaticHandler;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
-public abstract class AbstractServiceVerticle extends AbstractVerticle {
+public class ServiceVerticle extends AbstractVerticle {
 
     private final AbstractServiceModule serviceModule;
 
-    protected AbstractServiceVerticle(final AbstractServiceModule serviceModule) {
+    protected ServiceVerticle(final AbstractServiceModule serviceModule) {
         this.serviceModule = serviceModule;
     }
 
@@ -47,7 +45,7 @@ public abstract class AbstractServiceVerticle extends AbstractVerticle {
             log.info("Instantiating API: " + clazz.getName());
             Object apiImplInstance = injector.getInstance(clazz);
             log.info("Configuring API bindings: " + clazz.getName());
-            new APIConfigurationHandler(apiImplInstance).configure(router);
+            new APIMethodBindConfigurationHandler(apiImplInstance).configure(router);
         }
     }
 

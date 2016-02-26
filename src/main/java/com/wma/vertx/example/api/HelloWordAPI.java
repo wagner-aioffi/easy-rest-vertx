@@ -11,14 +11,28 @@ import java.util.concurrent.CompletableFuture;
 public class HelloWordAPI {
 
     @Sync
-    @ApiOperation(path="/sync/:name", method = ApiOperation.Method.GET)
+    @ApiOperation(
+            path="/sync/:name",
+            method = ApiOperation.Method.GET
+    )
     public Message getMessageSync(@PathParam("name") final String name) {
         return new Message(name);
     }
 
-    @ApiOperation(path="/async/:name", method = ApiOperation.Method.GET)
+    @ApiOperation(
+            path="/async/:name",
+            returnType = ApiOperation.Type.TEXT,
+            method = ApiOperation.Method.GET
+    )
     public CompletableFuture<Message> getMessage(@PathParam("name") final String name) {
-        return CompletableFuture.supplyAsync(() -> new Message(name));
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException("eerrr");
+            }
+            return new Message(name);
+        });
     }
 
 }

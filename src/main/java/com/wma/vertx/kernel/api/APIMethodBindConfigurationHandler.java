@@ -1,6 +1,5 @@
 package com.wma.vertx.kernel.api;
 
-import com.google.inject.Binder;
 import com.wma.vertx.kernel.annotation.ApiOperation;
 import com.wma.vertx.kernel.annotation.ApiPath;
 import io.vertx.ext.web.Router;
@@ -9,13 +8,13 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
-public class APIConfigurationHandler {
+public class APIMethodBindConfigurationHandler {
 
     private final Object apiHandler;
 
     private final String apiPath;
 
-    public APIConfigurationHandler(final Object apiHandler) {
+    public APIMethodBindConfigurationHandler(final Object apiHandler) {
 
         this.apiHandler = apiHandler;
         apiPath = getRequiredAnnotation(ApiPath.class, apiHandler).value();
@@ -36,22 +35,27 @@ public class APIConfigurationHandler {
     private void addOperation(final ApiOperation apiOperation, final Method method,
             final Router router) {
         switch (apiOperation.method()) {
-            case GET: configureGet(apiOperation, method, router);
-            case POST: configurePost(apiOperation, method, router);
-            case PUT: configurePut(apiOperation, method, router);
+            case GET:
+                configureGet(apiOperation, method, router);
+                break;
+            case POST:
+                configurePost(apiOperation, method, router);
+                break;
+            case PUT:
+                configurePut(apiOperation, method, router);
+                break;
 
         }
     }
 
     private void configurePut(final ApiOperation apiOperation, Method method,
             final Router router) {
-        router.put(apiOperation.path()).handler(context -> {
-
-        });
+            throw new RuntimeException("Not implemented");
     }
 
     private void configurePost(final ApiOperation apiOperation, Method method,
             final Router router) {
+        throw new RuntimeException("Not implemented");
     }
 
     private void configureGet(final ApiOperation apiOperation, Method method,

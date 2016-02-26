@@ -1,9 +1,11 @@
 package com.wma.vertx.kernel.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Stopwatch;
 import com.wma.vertx.kernel.annotation.ApiOperation;
 import com.wma.vertx.kernel.annotation.PathParam;
 import com.wma.vertx.kernel.annotation.Sync;
+import com.wma.vertx.kernel.serializer.JsonSerializer;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
@@ -30,6 +32,7 @@ public class OperationMethodBind {
     private final ApiOperation apiOperation;
     private final Method method;
     private ParameterBindConfiguration[] argsConfig;
+    private JsonSerializer jsonSerializer = new JsonSerializer();
 
     public OperationMethodBind(final String apiPrefix, ApiOperation apiOperation, Method method) {
         this.apiPrefix = apiPrefix;
@@ -69,16 +72,21 @@ public class OperationMethodBind {
                 invokeTimer.stop();
                 log.info("Invoke time: " + invokeTimer.toString());
                 final HttpServerResponse response = context.response();
-                final String responseStr = result.toString();
-                response.putHeader("content-type", "text/plain");
-                response.putHeader("Content-Length", Integer.toString(responseStr.length()));
-                response.write(responseStr);
-                response.end();
+                final String responseStr = serializeResponse(result);
+                writeResponse(response, responseStr, "application/json");
             } catch (Exception e) {
                 throw new RuntimeException("FIXME: improve ex. handler", e);
             }
         };
         return handler;
+    }
+
+    private String serializeResponse(Object result) {
+        switch (apiOperation.returnType()) {
+            case JSON: return jsonSerializer.serialize(result);
+            case TEXT: return result != null? result.toString() : "";
+            default: throw new RuntimeException("Don't know return type");
+        }
     }
 
     private Handler<RoutingContext> createAsyncHandler(Object apiInstance) {
@@ -93,18 +101,23 @@ public class OperationMethodBind {
 
                 futureResult.thenAccept(result -> {
                     final HttpServerResponse response = context.response();
-                    final String responseStr = result.toString();
-                    response.putHeader("content-type", "text/plain");
-                    response.putHeader("Content-Length",
-                            Integer.toString(responseStr.length()));
-                    response.write(responseStr);
-                    response.end();
+                    final String responseStr = serializeResponse(result);
+                    writeResponse(response, responseStr, "text/plain");
                 });
             } catch (Exception e) {
                 throw new RuntimeException("FIXME: improve ex. handler", e);
             }
         };
         return handler;
+    }
+
+    private void writeResponse(final HttpServerResponse response,
+            final String value,
+            final String contentType) {
+        response.putHeader("content-type", contentType);
+        response.putHeader("Content-Length", Integer.toString(value.length()));
+        response.write(value);
+        response.end();
     }
 
     private Object[] buildInvokeArgs(final RoutingContext context) {
